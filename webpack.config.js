@@ -1,20 +1,25 @@
+require('dotenv').config();
 var path = require('path');
 var webpack = require('webpack');
+var CompressionPlugin = require("compression-webpack-plugin");
+var StatsPlugin = require('stats-webpack-plugin');
+
 //var StatsPlugin = require('stats-webpack-plugin');
 
 var devServerPort = 3808;
 var production = process.env.NODE_ENV === 'production';
 var serverIp = process.env.SERVER_IP ? process.env.SERVER_IP : '//0.0.0.0:';
-
+console.log(production);
 
 var config = {
   entry: [
     './src/index.js'
   ],
   output: {
-    path: __dirname,
     publicPath: '/',
-    filename: 'bundle.js'
+    path: path.join(__dirname, '.', 'public', 'webpack'),
+    //filename: '/webpack/bundle.js',
+    filename: production ? '[name]-[chunkhash].js' : '[name].js'
   },
   module: {
     loaders: [
@@ -58,8 +63,31 @@ var config = {
   },
   devServer: {
     historyApiFallback: true,
-    contentBase: '/'
-  }
+    //contentBase: '/'
+  },
+  plugins: [
+    // must match config.webpack.manifest_filename
+    new StatsPlugin('manifest.json', {
+      // We only need assetsByChunkName
+      chunkModules: false,
+      source: false,
+      chunks: false,
+      modules: false,
+      assets: true
+    }),
+
+    new webpack.ProvidePlugin({
+      $: 'jquery'
+    }),
+
+    new CompressionPlugin({
+        asset: "[path].gz[query]",
+        algorithm: "gzip",
+        test: /\.js$|\.html$/,
+        threshold: 10240,
+        minRatio: 0.8
+    })
+  ]
 };
 
 if (production) {
