@@ -2,14 +2,28 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
+import promiseMiddleware from 'redux-promise-middleware';
+import { Router, Route, browserHistory } from 'react-router';
+import { syncHistoryWithStore, routerReducer } from 'react-router-redux'
 
+import routes from './routes';
 import App from './components/app';
-import reducers from './reducers';
+import rootReducer from './reducers';
 
-const createStoreWithMiddleware = applyMiddleware()(createStore);
+const storeWithPromise = applyMiddleware(promiseMiddleware())(createStore);
+const store = storeWithPromise(
+  rootReducer,
+  window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+);
+
+function fireTracking() {
+
+}
+
+const history = syncHistoryWithStore(browserHistory, store);
 
 ReactDOM.render(
-  <Provider store={createStoreWithMiddleware(reducers)}>
-    <App />
+  <Provider store={store}>
+    <Router onUpdate={fireTracking} history={history} routes={routes} />
   </Provider>
   , document.querySelector('.container'));

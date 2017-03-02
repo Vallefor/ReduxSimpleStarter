@@ -1,4 +1,13 @@
-module.exports = {
+var path = require('path');
+var webpack = require('webpack');
+//var StatsPlugin = require('stats-webpack-plugin');
+
+var devServerPort = 3808;
+var production = process.env.NODE_ENV === 'production';
+var serverIp = process.env.SERVER_IP ? process.env.SERVER_IP : '//0.0.0.0:';
+
+
+var config = {
   entry: [
     './src/index.js'
   ],
@@ -8,19 +17,74 @@ module.exports = {
     filename: 'bundle.js'
   },
   module: {
-    loaders: [{
-      exclude: /node_modules/,
-      loader: 'babel',
-      query: {
-        presets: ['react', 'es2015', 'stage-1']
+    loaders: [
+      {
+        test: /\.jsx$/,
+        exclude: /(node_modules|bower_components)/,
+        loader: "babel?presets[]=react,presets[]=es2015,presets[]=stage-0"
+      },
+      {
+        test: /\.(es6|js)$/,
+        exclude: /(node_modules|bower_components)/,
+        loader: "babel?presets[]=es2015,presets[]=stage-0"
+      },
+      {
+        test: /\.(json)$/,
+        loader: "json-loader"
+      },
+      {
+        test: /\.css$/,
+        loader: 'style!css'
+      },
+      {
+        test: /\.(scss|sass)$/,
+        loaders: [
+          'style',
+          'css?modules,localIdentName=' +
+          (production ?
+            '[hash:base64:5]' :
+            '[path][name]--[local]--[hash:base64:5]'),
+          'sass'
+        ]
+      },
+      {
+        test: /\.(jpe?g|png|gif|svg)$/i,
+        loader: 'file'
       }
-    }]
+    ]
   },
   resolve: {
     extensions: ['', '.js', '.jsx']
   },
   devServer: {
     historyApiFallback: true,
-    contentBase: './'
+    contentBase: '/'
   }
 };
+
+if (production) {
+  config.plugins.push(
+    new webpack.NoErrorsPlugin(),
+    new webpack.optimize.UglifyJsPlugin({
+      compressor: { warnings: false },
+      sourceMap: false
+    }),
+    new webpack.DefinePlugin({
+      'process.env': { NODE_ENV: JSON.stringify('production') }
+    }),
+    new webpack.optimize.DedupePlugin(),
+    new webpack.optimize.OccurenceOrderPlugin()
+  );
+} else {
+  config.devServer = {
+    compress: true,
+    port: devServerPort,
+    historyApiFallback: true,
+    headers: { 'Access-Control-Allow-Origin': '*' }
+  };
+  config.output.publicPath = serverIp + devServerPort + '/webpack/';
+  // Source maps
+  config.devtool = 'cheap-module-eval-source-map';
+}
+
+module.exports=config;
