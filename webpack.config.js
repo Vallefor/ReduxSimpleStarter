@@ -9,7 +9,6 @@ var StatsPlugin = require('stats-webpack-plugin');
 var devServerPort = 3808;
 var production = process.env.NODE_ENV === 'production';
 var serverIp = process.env.SERVER_IP ? process.env.SERVER_IP : '//0.0.0.0:';
-console.log(production);
 
 var config = {
   entry: [

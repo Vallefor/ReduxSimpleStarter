@@ -10,6 +10,12 @@ import routes from './routes';
 import App from './components/app';
 import rootReducer from './reducers';
 
+import es6Promise from 'es6-promise';
+
+if (typeof window.Promise == "undefined") {
+  es6Promise.polyfill();
+}
+
 const storeWithPromise = applyMiddleware(promiseMiddleware())(createStore);
 const store = storeWithPromise(
   rootReducer,
